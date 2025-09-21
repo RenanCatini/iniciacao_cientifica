@@ -1,4 +1,4 @@
-# Iniciação Científica
+# Iniciação Científica 💻🩺
 
 Este repositório é dedicado para armazenar conteúdos da minha IC, como os principais códigos e arquivos.
 
