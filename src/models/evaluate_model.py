@@ -13,17 +13,16 @@ def evaluate_model(y_true, y_pred, title="Matriz de Confusão"):
         y_true (list, array): Os rótulos verdadeiros.
         y_pred (list, array): As previsões do modelo.
         title (str): O título para o gráfico da matriz de confusão.
-    
-    Returns:
-        dict: Um dicionário contendo as métricas de avaliação.
     """
 
     cm = confusion_matrix(y_true, y_pred)
 
     # Exibir a matriz de confusão como gráfico
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["N", "A"])
-    disp.plot(cmap="Blues", values_format="d", text_kw={'size': 14})  
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["N", "AN"])
+    disp.plot(cmap="YlOrRd", values_format="d", text_kw={'size': 14})  
     plt.title(title)
+    plt.xlabel("Predito")
+    plt.ylabel("Verdadeiro")
     plt.show()
 
     metrics = {
