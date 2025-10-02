@@ -1,7 +1,7 @@
-# Anotações - Árvore de Decisão 🌳
+# Anotações sobre Modelos de Machine Learn
 
-**Matéria:** Machine Learning
-**Data:** 21/09/2025
+
+# Anotações - Árvore de Decisão 🌳
 
 ---
 
@@ -102,4 +102,96 @@ modelo_arvore = DecisionTreeClassifier()
     * Garante que o resultado seja **sempre o mesmo** toda vez que a gente rodar o código.
     * A árvore usa um pouco de aleatoriedade, então sem isso, cada execução pode dar um resultado um tiquinho diferente. Usar um número fixo garante que nosso experimento seja confiável.
         * **Por quê?** De onde vem a aleatoriedade? Se a árvore está em dúvida entre duas perguntas (ex: "idade > 40" e "salário > 50k") e ambas geram **exatamente a mesma melhoria** de pureza, o algoritmo precisa de um critério de desempate. Ele escolhe uma delas aleatoriamente. Se não usarmos o `random_state`, cada vez que rodarmos o código, ele pode desempatar de um jeito diferente, gerando uma árvore levemente diferente e, consequentemente, resultados diferentes. O `random_state=42` é como dizer: "toda vez que tiver um empate, desempate sempre do mesmo jeito".
+
+
+----
+
+# Anotações - Support Vector Machine (SVM) 🦾
+
+### Ideia Principal
+* Pense em separar dois grupos de pontos em um papel.
+* O SVM não quer só traçar uma linha qualquer pra separar. Ele quer encontrar a **"avenida" mais larga possível** entre os dois grupos.
+* Os pontos que ficam na beirada dessa avenida são os mais importantes.
+
+### O que é?
+* Modelo de ML usado principalmente para classificação.
+* Busca encontrar um "hiperplano" (uma linha, num plano 2D, ou um plano, num espaço 3D, etc.) que melhor divide os dados em classes.
+* O "melhor" hiperplano é aquele com a **margem máxima**.
+
+### Como funciona? (A parte importante)
+
+**A grande dúvida:** Como o SVM decide qual é a "melhor" linha/avenida para separar os grupos?
+
+**Resposta: MAXIMIZAR A MARGEM.**
+
+* **Margem:** É a distância entre a linha de separação central e os pontos mais próximos de cada classe. Pense nela como a largura total da "avenida".
+* **Vetores de Suporte (Support Vectors):** São os pontos de dados que ficam exatamente na beirada da margem (no "meio-fio" da avenida). Eles são os pontos mais difíceis de classificar e são os únicos que o modelo usa para definir a fronteira. Se a gente remover qualquer outro ponto que não seja um vetor de suporte, a "avenida" não muda.
+
+**OBJETIVO DO ALGORITMO:** Encontrar a linha que cria a **avenida mais larga possível**, pois isso torna o modelo mais robusto para classificar novos dados.
+
+* *E se os dados não puderem ser separados por uma linha reta? Aqui entra a mágica:*
+* **O Truque do Kernel (Kernel Trick):** É uma função matemática que projeta os dados para uma dimensão maior, onde eles magicamente se tornam separáveis por uma linha (ou plano).
+    * **Analogia:** Imagine pontos azuis no centro de um prato e vermelhos em volta (impossível separar com uma linha). O Kernel Trick seria como bater com força embaixo do prato, jogando os pontos azuis para o alto. Agora, em 3D, você pode passar uma "folha de papel" (um plano) horizontalmente para separar perfeitamente os pontos azuis dos vermelhos.
+
+### Vantagens e Desvantagens
+
+**👍 Vantagens:**
+* Muito eficaz em espaços de alta dimensão (muitas features).
+* Eficiente em termos de memória, pois usa apenas os "vetores de suporte".
+* Versátil graças ao "Truque do Kernel".
+
+**👎 Desvantagens:**
+* **ESCALONAMENTO DE DADOS!!! (MUITO CUIDADO AQUI)**
+* O que é? O SVM é muito sensível à escala das features. Se uma feature (ex: salário) tem valores na casa dos milhares e outra (ex: idade) na casa das dezenas, a feature de maior escala vai dominar o modelo.
+* **Solução:** É **obrigatório** normalizar ou padronizar os dados (ex: com `StandardScaler` do `sklearn`).
+* Pode ser lento em datasets muito grandes.
+
+### Mão na Massa: O `SVC` do `sklearn` 🐍
+
+Na prática, usamos a biblioteca `scikit-learn`. `SVC` significa "Support Vector Classification".
+
+```python
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+
+# 1. É CRUCIAL escalar os dados primeiro!
+scaler = StandardScaler()
+X_treino_scaled = scaler.fit_transform(X_treino)
+# X_teste_scaled = scaler.transform(X_teste) # Usa o mesmo scaler!
+
+# 2. Criando o modelo com os parâmetros padrão
+modelo_svm = SVC()
+
+# 3. Depois é só treinar com os dados JÁ ESCALADOS
+# modelo_svm.fit(X_treino_scaled, y_treino)
+```
+
+### Hiperparâmetros importantes para criar o modelo
+
+```python
+    SVC(C=1.0, kernel='rbf', gamma='scale', random_state=42)
+```
+
+* `C=1.0` **(Parâmetro de Regularização)**
+    * Controla o equilíbrio entre maximizar a margem e minimizar o erro de classificação.
+    * **C baixo:** Prioriza uma **margem larga**, mesmo que isso signifique classificar errado alguns pontos do treino. É uma "margem suave" que gera um modelo mais simples e com **menor chance de overfitting**.
+    * **C alto:** Tenta classificar **corretamente todos** os pontos de treino, o que pode levar a uma margem mais estreita e a um modelo mais complexo. **GRANDE CHANCE DE OVERFITTING!**
+    > **Analogia:** `C` é o "preço" que o modelo paga por cada erro. Com `C` alto, o preço é caro, então ele evita erros a todo custo, se ajustando demais aos dados de treino.
+
+* `kernel='rbf'` **(ou `'linear'`, `'poly'`)**
+    * É aqui que a gente escolhe o "Truque do Kernel" para lidar com a complexidade dos dados.
+    * `'linear'`: Para dados que você acredita serem linearmente separáveis. É o mais simples e rápido.
+    * `'rbf'` (Radial Basis Function): É o padrão e um ótimo ponto de partida. Funciona bem para a maioria dos casos complexos e não-lineares, criando fronteiras baseadas em distância.
+    * `'poly'`: Usa uma função polinomial para criar fronteiras curvas.
+
+* `gamma='scale'` **(ou um número, ex: `0.1`)**
+    * Define o alcance da influência de um único ponto de treino. **Só afeta kernels não-lineares como `'rbf'` e `'poly'`.**
+    * **`gamma` baixo:** A influência de um ponto é **grande** (longo alcance). A fronteira de decisão é mais suave e geral. Pode levar a *underfitting*.
+    * **`gamma` alto:** A influência de um ponto é **pequena** (curto alcance). A fronteira de decisão fica mais irregular e se ajusta muito aos dados de treino. Pode levar a *overfitting*.
+    > **Por quê?** Um `gamma` alto significa que o modelo considera apenas os pontos muito próximos para tomar uma decisão, ignorando o "quadro geral". `gamma='scale'` (padrão) é uma escolha segura que se ajusta automaticamente com base nos seus dados.
+
+* `random_state=42` **(ou qualquer número)**
+    * **IMPORTANTÍSSIMO P/ REPRODUZIBILIDADE!**
+    * Embora o algoritmo do SVM seja determinístico, ele usa um gerador de números aleatórios para algumas tarefas internas (como quando se usa `probability=True`).
+    * Usar um `random_state` fixo garante que, sob as mesmas condições, o resultado será **sempre o mesmo**, o que é crucial para comparar experimentos e garantir a confiabilidade do seu trabalho.
 
